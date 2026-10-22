@@ -1,0 +1,83 @@
+{
+ "updated": "2026-10-22T23:34:02.335681+00:00",
+ "episode": "001 · I Found My Own Missing Poster",
+ "stage": "יצירת קליפים",
+ "clips_done": 152,
+ "clips_total": 188,
+ "generator_running": true,
+ "eta_minutes": 57,
+ "server": {
+  "gpu": "L40S",
+  "cost_per_hr": 1.09,
+  "hours": 4.42,
+  "cost_so_far": 4.82
+ },
+ "log_tail": [
+  "scene_035_1 94",
+  "scene_035_2 90",
+  "scene_035_3 95",
+  "scene_035_4 94"
+ ],
+ "frames": [
+  {
+   "file": "frames/f00.jpg",
+   "clip": "scene_035_4",
+   "at": "2026-10-22T23:33:02.413021+00:00"
+  },
+  {
+   "file": "frames/f01.jpg",
+   "clip": "scene_035_3",
+   "at": "2026-10-22T23:31:23.919933+00:00"
+  },
+  {
+   "file": "frames/f02.jpg",
+   "clip": "scene_035_2",
+   "at": "2026-10-22T23:29:44.904050+00:00"
+  },
+  {
+   "file": "frames/f03.jpg",
+   "clip": "scene_035_1",
+   "at": "2026-10-22T23:28:11.568489+00:00"
+  },
+  {
+   "file": "frames/f04.jpg",
+   "clip": "scene_035_0",
+   "at": "2026-10-22T23:26:33.692904+00:00"
+  },
+  {
+   "file": "frames/f05.jpg",
+   "clip": "scene_034_2",
+   "at": "2026-10-22T23:24:53.758380+00:00"
+  },
+  {
+   "file": "frames/f06.jpg",
+   "clip": "scene_034_1",
+   "at": "2026-10-22T23:23:15.578525+00:00"
+  },
+  {
+   "file": "frames/f07.jpg",
+   "clip": "scene_034_0",
+   "at": "2026-10-22T23:21:36.803515+00:00"
+  },
+  {
+   "file": "frames/f08.jpg",
+   "clip": "scene_033_4",
+   "at": "2026-10-22T23:19:58.753085+00:00"
+  },
+  {
+   "file": "frames/f09.jpg",
+   "clip": "scene_033_3",
+   "at": "2026-10-22T23:18:18.940747+00:00"
+  },
+  {
+   "file": "frames/f10.jpg",
+   "clip": "scene_033_2",
+   "at": "2026-10-22T23:16:40.704837+00:00"
+  },
+  {
+   "file": "frames/f11.jpg",
+   "clip": "scene_033_1",
+   "at": "2026-10-22T23:15:00.647410+00:00"
+  }
+ ]
+}
