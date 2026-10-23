@@ -1,0 +1,120 @@
+{
+ "version": 1,
+ "updated": "2026-10-23T11:47:00Z",
+ "sessions": {
+  "פרק 2 - תמונות וקריינות": {
+   "started": "2026-10-23T07:10:38Z",
+   "jobs": {
+    "תמונות": {
+     "kind": "images",
+     "done": 170,
+     "total": 170,
+     "step": "כל 170 התמונות מוכנות",
+     "status": "done",
+     "started": "2026-10-23T07:10:38Z",
+     "preview": "previews/29ddbb17f291.jpg",
+     "finished": "2026-10-23T07:10:38Z",
+     "updated": "2026-10-23T07:10:38Z"
+    },
+    "קריינות": {
+     "kind": "narration",
+     "done": 47,
+     "total": 47,
+     "step": "קריינות ל-47 סצנות מוכנה",
+     "status": "done",
+     "started": "2026-10-23T07:12:03Z",
+     "finished": "2026-10-23T07:12:03Z",
+     "updated": "2026-10-23T07:12:03Z"
+    },
+    "קליפים": {
+     "kind": "clips",
+     "done": 0,
+     "total": 170,
+     "step": "ממתין למחשב של קובי עם כרטיס המסך",
+     "status": "waiting",
+     "started": "2026-10-23T11:46:58Z",
+     "updated": "2026-10-23T11:46:58Z"
+    }
+   },
+   "updated": "2026-10-23T11:46:58Z"
+  },
+  "פרק 1 בספרדית": {
+   "started": "2026-10-23T10:44:36Z",
+   "jobs": {
+    "קריינות": {
+     "kind": "narration",
+     "done": 45,
+     "total": 45,
+     "step": "קריינות בספרדית מוכנה",
+     "status": "done",
+     "started": "2026-10-23T11:00:33Z",
+     "finished": "2026-10-23T11:00:33Z",
+     "updated": "2026-10-23T11:00:33Z"
+    },
+    "תמונות": {
+     "kind": "images",
+     "done": 190,
+     "total": 190,
+     "step": "תמונות עם טקסט בספרדית",
+     "status": "done",
+     "started": "2026-10-23T10:44:36Z",
+     "finished": "2026-10-23T10:44:36Z",
+     "updated": "2026-10-23T10:44:36Z"
+    },
+    "רינדור לרוחב": {
+     "kind": "render",
+     "done": 1,
+     "total": 1,
+     "step": "final.mp4 (18.1 דקות)",
+     "status": "done",
+     "started": "2026-10-23T11:14:21Z",
+     "preview": "previews/d4332fd8dc98.jpg",
+     "finished": "2026-10-23T11:14:21Z",
+     "updated": "2026-10-23T11:14:21Z"
+    },
+    "רינדור לאורך": {
+     "kind": "render",
+     "done": 1,
+     "total": 1,
+     "step": "final_v.mp4",
+     "status": "done",
+     "started": "2026-10-23T11:38:53Z",
+     "preview": "previews/217b1546d9f0.jpg",
+     "finished": "2026-10-23T11:38:53Z",
+     "updated": "2026-10-23T11:38:53Z"
+    },
+    "חלוקה לשני חלקים לאורך": {
+     "kind": "render",
+     "done": 2,
+     "total": 2,
+     "step": "vertical_part_a.mp4, vertical_part_b.mp4",
+     "status": "done",
+     "started": "2026-10-23T11:41:18Z",
+     "finished": "2026-10-23T11:41:18Z",
+     "updated": "2026-10-23T11:41:18Z"
+    },
+    "שורטים": {
+     "kind": "render",
+     "done": 3,
+     "total": 3,
+     "step": "short_s1_poster, short_s2_drawer, short_s3_6am",
+     "status": "done",
+     "started": "2026-10-23T11:39:52Z",
+     "preview": "previews/60e655081d08.jpg",
+     "finished": "2026-10-23T11:39:52Z",
+     "updated": "2026-10-23T11:39:52Z"
+    },
+    "העלאה ותזמון": {
+     "kind": "upload",
+     "done": 0,
+     "total": 1,
+     "step": "ממתין לבדיקת איכות ולאישור לפני פרסום",
+     "status": "waiting",
+     "started": "2026-10-23T11:47:00Z",
+     "updated": "2026-10-23T11:47:00Z"
+    }
+   },
+   "updated": "2026-10-23T11:47:00Z"
+  }
+ }
+}
