@@ -1,83 +1,83 @@
 {
- "updated": "2026-10-23T00:04:51.693470+00:00",
+ "updated": "2026-10-23T00:09:58.998076+00:00",
  "episode": "001 · I Found My Own Missing Poster",
  "stage": "יצירת קליפים",
- "clips_done": 171,
+ "clips_done": 174,
  "clips_total": 188,
  "generator_running": true,
- "eta_minutes": 27,
+ "eta_minutes": 22,
  "server": {
   "gpu": "L40S",
   "cost_per_hr": 1.09,
-  "hours": 4.94,
-  "cost_so_far": 5.38
+  "hours": 5.02,
+  "cost_so_far": 5.48
  },
  "log_tail": [
-  "scene_038_2 90",
-  "scene_038_3 94",
-  "scene_039_0 94",
-  "scene_039_1 94"
+  "scene_039_1 94",
+  "scene_039_2 94",
+  "scene_039_3 94",
+  "scene_040_0 94"
  ],
  "frames": [
   {
    "file": "frames/f00.jpg",
+   "clip": "scene_040_0",
+   "at": "2026-10-23T00:08:47.233311+00:00"
+  },
+  {
+   "file": "frames/f01.jpg",
+   "clip": "scene_039_3",
+   "at": "2026-10-23T00:07:09.603705+00:00"
+  },
+  {
+   "file": "frames/f02.jpg",
+   "clip": "scene_039_2",
+   "at": "2026-10-23T00:05:31.341388+00:00"
+  },
+  {
+   "file": "frames/f03.jpg",
    "clip": "scene_039_1",
    "at": "2026-10-23T00:03:53.247122+00:00"
   },
   {
-   "file": "frames/f01.jpg",
+   "file": "frames/f04.jpg",
    "clip": "scene_039_0",
    "at": "2026-10-23T00:02:15.247045+00:00"
   },
   {
-   "file": "frames/f02.jpg",
+   "file": "frames/f05.jpg",
    "clip": "scene_038_3",
    "at": "2026-10-23T00:00:37.700232+00:00"
   },
   {
-   "file": "frames/f03.jpg",
+   "file": "frames/f06.jpg",
    "clip": "scene_038_2",
    "at": "2026-10-22T23:58:59.557158+00:00"
   },
   {
-   "file": "frames/f04.jpg",
+   "file": "frames/f07.jpg",
    "clip": "scene_038_1",
    "at": "2026-10-22T23:57:26.769550+00:00"
   },
   {
-   "file": "frames/f05.jpg",
+   "file": "frames/f08.jpg",
    "clip": "scene_038_0",
    "at": "2026-10-22T23:55:47.908651+00:00"
   },
   {
-   "file": "frames/f06.jpg",
+   "file": "frames/f09.jpg",
    "clip": "scene_037_9",
    "at": "2026-10-22T23:54:10.106917+00:00"
   },
   {
-   "file": "frames/f07.jpg",
+   "file": "frames/f10.jpg",
    "clip": "scene_037_8",
    "at": "2026-10-22T23:52:31.493349+00:00"
   },
   {
-   "file": "frames/f08.jpg",
+   "file": "frames/f11.jpg",
    "clip": "scene_037_7",
    "at": "2026-10-22T23:50:52.666817+00:00"
-  },
-  {
-   "file": "frames/f09.jpg",
-   "clip": "scene_037_6",
-   "at": "2026-10-22T23:49:13.970229+00:00"
-  },
-  {
-   "file": "frames/f10.jpg",
-   "clip": "scene_037_5",
-   "at": "2026-10-22T23:47:35.645644+00:00"
-  },
-  {
-   "file": "frames/f11.jpg",
-   "clip": "scene_037_4",
-   "at": "2026-10-22T23:46:02.206353+00:00"
   }
  ]
 }
