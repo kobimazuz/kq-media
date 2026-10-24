@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated": "2026-10-24T17:15:30Z",
+ "updated": "2026-10-24T17:16:06Z",
  "sessions": {
   "פרק 2 - תמונות וקריינות": {
    "started": "2026-10-23T07:10:38Z",
@@ -121,17 +121,16 @@
    "jobs": {
     "longshorts": {
      "kind": "render",
-     "done": 1,
-     "total": 1,
-     "step": "הסתיים",
-     "status": "done",
+     "done": 0,
+     "total": 7,
+     "step": "מרנדר ls1_poster",
+     "status": "running",
      "started": "2026-10-24T17:11:56Z",
-     "updated": "2026-10-24T17:15:30Z",
-     "preview": "previews/326fb7815eb9.jpg",
-     "finished": "2026-10-24T17:15:30Z"
+     "updated": "2026-10-24T17:16:06Z",
+     "preview": "previews/326fb7815eb9.jpg"
     }
    },
-   "updated": "2026-10-24T17:15:30Z"
+   "updated": "2026-10-24T17:16:06Z"
   }
  }
 }
