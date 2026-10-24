@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated": "2026-10-24T17:27:00Z",
+ "updated": "2026-10-24T17:29:10Z",
  "sessions": {
   "פרק 2 - תמונות וקריינות": {
    "started": "2026-10-23T07:10:38Z",
@@ -121,16 +121,16 @@
    "jobs": {
     "longshorts": {
      "kind": "render",
-     "done": 4,
+     "done": 5,
      "total": 7,
-     "step": "מרנדר ls5_grace",
+     "step": "מרנדר ls6_truth",
      "status": "running",
      "started": "2026-10-24T17:11:56Z",
-     "updated": "2026-10-24T17:27:00Z",
+     "updated": "2026-10-24T17:29:10Z",
      "preview": "previews/326fb7815eb9.jpg"
     }
    },
-   "updated": "2026-10-24T17:27:00Z"
+   "updated": "2026-10-24T17:29:10Z"
   }
  }
 }
