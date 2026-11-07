@@ -24,7 +24,7 @@ from pathlib import Path
 
 import requests
 
-VERSION = "2026-11-07.3"
+VERSION = "2026-11-07.5"
 SB = "https://stvjtutkgpswmyrqyvec.supabase.co/rest/v1"
 KEY = os.environ.get("KQ_SUPABASE_SERVICE_KEY", "")
 REPO = Path(os.environ.get("KQ_REPO", r"D:\kq\youtube-ai-channel"))
@@ -33,13 +33,17 @@ FLOW_OUT = Path(os.environ.get("KQ_FLOW_OUT", r"D:\kq\flow-mcp-out"))
 POLL, BEAT, FLOW_BEAT = 20, 60, 300
 LOG = Path(os.environ.get("KQ_AGENT_LOG", r"D:\kq\home_agent.log"))
 
-# the two Flow MCP servers, as configured in C:\Users\User\.claude.json (docs/flow_mcp_setup.md)
+# the agent's OWN two Flow MCP servers (owner 07.11.2026: "two separate, clean ones, not what was already open"): own
+# Chrome profiles, CDP and studio ports, so they never touch the Chrome/studio of a Claude session at home (9333/9334,
+# 8787/8788). Each profile needs one Google sign-in in the Chrome window it opens the first time. Output stays on C, the
+# drive Flow downloads to (C -> D gave "EXDEV: cross-device link not permitted"); the agent then copies to the repo.
 SERVERS = {
-    "flow": {"args": [r"C:\Users\User\flow-mcp\dist\index.js"], "cdp": 9333,
-             "env": {"FLOW_MCP_OUTPUT": str(FLOW_OUT)}},
-    "flow-b": {"args": [r"C:/Users/User/flow-mcp-2/dist/index.js"], "cdp": 9334,
-               "env": {"FLOW_MCP_HOME": "C:/Users/User/.flow-mcp-b", "FLOW_MCP_CDP_PORT": "9334", "FLOW_MCP_PORT": "8788",
-                       "FLOW_MCP_OUTPUT": str(FLOW_OUT), "FLOW_MCP_PAUSE_MIN_S": "8", "FLOW_MCP_PAUSE_MAX_S": "20"}},
+    "flow": {"args": [r"C:\Users\User\flow-mcp\dist\index.js"], "cdp": 9343, "studio": 8797,
+             "env": {"FLOW_MCP_HOME": r"D:\kq\agent-flow-a", "FLOW_MCP_CDP_PORT": "9343", "FLOW_MCP_PORT": "8797",
+                     "FLOW_MCP_OUTPUT": r"C:\Users\User\flow-agent-out\a"}},
+    "flow-b": {"args": [r"C:/Users/User/flow-mcp-2/dist/index.js"], "cdp": 9344, "studio": 8798,
+               "env": {"FLOW_MCP_HOME": r"D:\kq\agent-flow-b", "FLOW_MCP_CDP_PORT": "9344", "FLOW_MCP_PORT": "8798",
+                       "FLOW_MCP_OUTPUT": r"C:\Users\User\flow-agent-out\b", "FLOW_MCP_PAUSE_MIN_S": "8", "FLOW_MCP_PAUSE_MAX_S": "20"}},
 }
 PAID = {"flow_clips", "flow_continue"}
 NOWIN = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0)}   # no console windows popping up and closing          # cost credits: need approved_credits on the row
@@ -86,7 +90,7 @@ class Flow:
         read, write = await self.stack.enter_async_context(stdio_client(params))
         self.session = await self.stack.enter_async_context(ClientSession(read, write))
         await self.session.initialize()
-        log(f"{self.name}: connected")
+        log(f"{self.name}: connected (own Chrome profile {cfg['env']['FLOW_MCP_HOME']}, studio http://127.0.0.1:{cfg['studio']})")
 
     async def close(self):
         if self.stack:
@@ -196,8 +200,9 @@ def collect(out_dir, listed, project, since):
 
 
 def new_files(project, since):
-    d = FLOW_OUT / project
-    if not d.exists():
+    ds = [Path(c["env"]["FLOW_MCP_OUTPUT"]) / project for c in SERVERS.values()] + [FLOW_OUT / project]
+    d = next((x for x in ds if x.exists()), None)
+    if d is None:
         return []
     return sorted(p for p in d.rglob("*") if p.is_file() and p.stat().st_mtime >= since - 2
                   and p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp", ".mp4", ".mov", ".wav", ".mp3"))
@@ -347,39 +352,55 @@ async def handle(job):
     log(f"job {job['id']} failed")
 
 
+def lane(job):
+    """Jobs run in parallel lanes, one job per lane: each Flow server is a lane, everything else is the local lane
+    (owner 07.11.2026: the Codex batch waited behind a long Flow job)."""
+    a, args = job["action"], job.get("args") or {}
+    return args.get("server", "flow") if a.startswith("flow") or a == "restart_flow" else "local"
+
+
 async def main():
     if not KEY:
         sys.exit("KQ_SUPABASE_SERVICE_KEY is not set (run install.ps1)")
     log(f"home agent {VERSION} on {socket.gethostname()}")
     last_beat = last_flow = 0
+    busy = {}                                   # lane -> asyncio task
+
+    async def run(job, ln):
+        try:
+            await handle(job)
+        finally:
+            busy.pop(ln, None)
+            try:
+                beat()
+            except Exception:  # noqa: BLE001
+                pass
+
     while True:
         try:
-            if time.time() - last_flow > FLOW_BEAT:
+            if time.time() - last_flow > FLOW_BEAT and not any(k in busy for k in FLOWS):
                 await refresh_flow_state()
                 last_flow = time.time()
             if time.time() - last_beat > BEAT:
-                beat()
+                beat(running=",".join(str(k) for k in busy) or None)
                 last_beat = time.time()
-            rows = sb("home_jobs?status=eq.queued&order=id.asc&limit=1")
-            if rows:
-                job = rows[0]
+            for job in sb("home_jobs?status=eq.queued&order=id.asc&limit=20") or []:
+                ln = lane(job)
+                if ln in busy:
+                    continue
                 # claim it only if it is still queued (another agent instance cannot take it twice)
                 got = sb(f"home_jobs?id=eq.{job['id']}&status=eq.queued", "PATCH",
                          {"status": "running", "started_at": now()}, prefer="return=representation")
                 if got:
-                    beat(running=job["id"])
-                    await handle(got[0])
-                    beat()
-                    last_beat = time.time()
-                    if RESTART:
-                        log("updated, restarting")
-                        for fl in FLOWS.values():
-                            await fl.close()
-                        os._exit(3)           # the scheduled task starts the new version within a minute
-                    continue
+                    busy[ln] = asyncio.create_task(run(got[0], ln))
+            if RESTART and not busy:
+                log("updated, restarting")
+                for fl in FLOWS.values():
+                    await fl.close()
+                os._exit(3)                     # the window starts the new version after 5 seconds
         except Exception as e:  # noqa: BLE001
             log("loop error:", e)
-        await asyncio.sleep(POLL)
+        await asyncio.sleep(5 if busy else POLL)
 
 
 if __name__ == "__main__":
