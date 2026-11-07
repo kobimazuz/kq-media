@@ -14,13 +14,19 @@ Write-Host "node $(node -v)"
 # 1. only the remotion folder of the branch (a separate, light copy)
 if (-not (Test-Path "$Dir\.git")) {
   git clone --filter=blob:none --no-checkout --depth 1 --branch $Branch https://github.com/kobimazuz/youtube-ai-channel.git $Dir
-  git -C $Dir sparse-checkout set --no-cone /remotion/
+  git -C $Dir sparse-checkout set --no-cone /remotion/ /assets/fonts/
   git -C $Dir checkout $Branch
 } else {
+  git -C $Dir sparse-checkout set --no-cone /remotion/ /assets/fonts/
   git -C $Dir fetch --depth 1 origin $Branch
   git -C $Dir reset --hard "origin/$Branch"
 }
 Set-Location "$Dir\remotion"
+
+# the fonts: in git public\fonts is a Linux link (a small text file on Windows), so the real folder is copied in
+if ((Test-Path "public\fonts") -and -not (Get-Item "public\fonts").PSIsContainer) { Remove-Item "public\fonts" -Force }
+New-Item -ItemType Directory -Force "public\fonts" | Out-Null
+Copy-Item "$Dir\assets\fonts\*" "public\fonts\" -Recurse -Force
 
 # 2. the episode files (clips, music, end card) into public\e01_01 (a folder, not the Linux link)
 $pub = "public\e01_01"
