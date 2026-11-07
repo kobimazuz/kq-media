@@ -24,7 +24,7 @@ from pathlib import Path
 
 import requests
 
-VERSION = "2026-11-07.2"
+VERSION = "2026-11-07.3"
 SB = "https://stvjtutkgpswmyrqyvec.supabase.co/rest/v1"
 KEY = os.environ.get("KQ_SUPABASE_SERVICE_KEY", "")
 REPO = Path(os.environ.get("KQ_REPO", r"D:\kq\youtube-ai-channel"))
@@ -41,7 +41,8 @@ SERVERS = {
                "env": {"FLOW_MCP_HOME": "C:/Users/User/.flow-mcp-b", "FLOW_MCP_CDP_PORT": "9334", "FLOW_MCP_PORT": "8788",
                        "FLOW_MCP_OUTPUT": str(FLOW_OUT), "FLOW_MCP_PAUSE_MIN_S": "8", "FLOW_MCP_PAUSE_MAX_S": "20"}},
 }
-PAID = {"flow_clips", "flow_continue"}          # cost credits: need approved_credits on the row
+PAID = {"flow_clips", "flow_continue"}
+NOWIN = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0)}   # no console windows popping up and closing          # cost credits: need approved_credits on the row
 
 
 def log(*a):
@@ -116,7 +117,7 @@ def kill_chrome(cdp_port):
     """Ends the Chrome that a Flow server started (found by its --remote-debugging-port)."""
     ps = (f"Get-CimInstance Win32_Process -Filter \"Name='chrome.exe'\" | Where-Object {{ $_.CommandLine -like "
           f"'*--remote-debugging-port={cdp_port}*' }} | ForEach-Object {{ Stop-Process -Id $_.ProcessId -Force }}")
-    subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, timeout=60)
+    subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, timeout=60, **NOWIN)
 
 
 async def restart_flow(name):
@@ -129,7 +130,7 @@ async def restart_flow(name):
 
 # ------------------------------------------------------------------ results back to git
 def git(*a, check=True):
-    return subprocess.run(["git", "-C", str(REPO), *a], capture_output=True, text=True, timeout=600, check=check)
+    return subprocess.run(["git", "-C", str(REPO), *a], capture_output=True, text=True, timeout=600, check=check, **NOWIN)
 
 
 def push_results(job_id, files):
@@ -269,14 +270,14 @@ async def run_action(job):
 def codex_alive():
     ps = ("(Get-CimInstance Win32_Process -Filter \"Name='powershell.exe'\" | Where-Object { $_.CommandLine -like "
           "'*codex_jobs*watch.ps1*' } | Measure-Object).Count")
-    r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True, timeout=60)
+    r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True, timeout=60, **NOWIN)
     return r.stdout.strip() not in ("", "0")
 
 
 def restart_codex():
     ps = ("Get-CimInstance Win32_Process -Filter \"Name='powershell.exe'\" | Where-Object { $_.CommandLine -like "
           "'*codex_jobs*watch.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }")
-    subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, timeout=60)
+    subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, timeout=60, **NOWIN)
     env = {**os.environ, "CODEX_HOME": os.environ.get("CODEX_HOME", r"D:\kq\codex-home")}
     subprocess.Popen(["powershell.exe", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", r"codex_jobs\watch.ps1"],
                      cwd=str(REPO), env=env, creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0))
