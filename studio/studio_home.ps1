@@ -1,11 +1,12 @@
-# Remotion studio on the home PC (owner 07.11.2026, doc 147): episode 1 in three templates, opened at http://localhost:3000
+# Remotion studio on the home PC (owner 07.11.2026, doc 147): episodes 1-7 in the final template (and 1 in A/B/C), at http://localhost:3000
 # Run in PowerShell:
 #   irm https://raw.githubusercontent.com/kobimazuz/kq-media/main/studio/studio_home.ps1 | iex
 # It uses its own folder D:\kq\studio, so the Codex service in D:\kq\youtube-ai-channel is not touched.
 $ErrorActionPreference = "Stop"
 $Dir    = "D:\kq\studio"
 $Branch = "claude/remotion-templates-0711"
-$Media  = "https://raw.githubusercontent.com/kobimazuz/kq-media/main/studio/e01_01"
+$MediaRoot = "https://raw.githubusercontent.com/kobimazuz/kq-media/main/studio"
+$Parts  = "e01_01","e01_02","e01_03","e01_04","e01_05","e01_06","e01_07"
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) { Write-Host "Node.js is missing: install it from https://nodejs.org (LTS) and run again." -ForegroundColor Red; return }
 if (-not (Get-Command git  -ErrorAction SilentlyContinue)) { Write-Host "Git is missing: install it from https://git-scm.com and run again." -ForegroundColor Red; return }
@@ -28,18 +29,22 @@ if ((Test-Path "public\fonts") -and -not (Get-Item "public\fonts").PSIsContainer
 New-Item -ItemType Directory -Force "public\fonts" | Out-Null
 Copy-Item "$Dir\assets\fonts\*" "public\fonts\" -Recurse -Force
 
-# 2. the episode files (clips, music, end card) into public\e01_01 (a folder, not the Linux link)
-$pub = "public\e01_01"
-if ((Test-Path $pub) -and -not (Get-Item $pub).PSIsContainer) { Remove-Item $pub -Force }
-New-Item -ItemType Directory -Force $pub | Out-Null
-$list = (Invoke-WebRequest "$Media/files.txt" -UseBasicParsing).Content -split "`n" | Where-Object { $_.Trim() }
-$i = 0
-foreach ($f in $list) {
-  $i++; $f = $f.Trim(); $out = Join-Path $pub ($f -replace "/", "\")
-  if (Test-Path $out) { continue }
-  New-Item -ItemType Directory -Force (Split-Path $out) | Out-Null
-  Write-Host "[$i/$($list.Count)] $f"
-  Invoke-WebRequest "$Media/$f" -OutFile $out -UseBasicParsing
+# 2. the episode files (clips, music, end card) into public\<part> (a folder, not the Linux link), for every episode
+foreach ($part in $Parts) {
+  $Media = "$MediaRoot/$part"
+  $pub = "public\$part"
+  if ((Test-Path $pub) -and -not (Get-Item $pub).PSIsContainer) { Remove-Item $pub -Force }
+  New-Item -ItemType Directory -Force $pub | Out-Null
+  $list = (Invoke-WebRequest "$Media/files.txt" -UseBasicParsing).Content -split "`n" | Where-Object { $_.Trim() }
+  $i = 0
+  foreach ($f in $list) {
+    $i++; $f = $f.Trim(); $out = Join-Path $pub ($f -replace "/", "\")
+    # the gift badge is small and gets fixed now and then (07.11: outline under the keyword): always fetched again
+    if ((Test-Path $out) -and ($f -notlike "*badge.png")) { continue }
+    New-Item -ItemType Directory -Force (Split-Path $out) | Out-Null
+    Write-Host "[$part $i/$($list.Count)] $f"
+    Invoke-WebRequest "$Media/$f" -OutFile $out -UseBasicParsing
+  }
 }
 
 # 3. install
