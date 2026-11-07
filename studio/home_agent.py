@@ -24,7 +24,7 @@ from pathlib import Path
 
 import requests
 
-VERSION = "2026-11-07.8"
+VERSION = "2026-11-07.9"
 SB = "https://stvjtutkgpswmyrqyvec.supabase.co/rest/v1"
 KEY = os.environ.get("KQ_SUPABASE_SERVICE_KEY", "")
 REPO = Path(os.environ.get("KQ_REPO", r"D:\kq\youtube-ai-channel"))
@@ -312,7 +312,14 @@ async def run_action(job):
         RESTART.append(True)
         return {"updated": True, "bytes": len(code)}
     if a == "git_pull":
-        return {"out": git("pull", "-q", "origin", BRANCH, check=False).stdout[-1000:]}
+        r = git("pull", "-q", "origin", BRANCH, check=False)
+        return {"code": r.returncode, "out": (r.stdout + r.stderr)[-1500:]}
+    if a == "git_sync":                         # pull (keeping local edits aside) and push what is committed but not pushed
+        r1 = git("pull", "-q", "--rebase", "--autostash", "origin", BRANCH, check=False)
+        r2 = git("push", "-q", "origin", f"HEAD:{BRANCH}", check=False)
+        st = git("status", "-sb", check=False)
+        return {"pull": [r1.returncode, (r1.stdout + r1.stderr)[-1200:]], "push": [r2.returncode, (r2.stdout + r2.stderr)[-1200:]],
+                "status": st.stdout[-1500:]}
     raise ValueError(f"unknown action {a}")
 
 
