@@ -42,6 +42,26 @@ foreach ($f in $list) {
   Invoke-WebRequest "$Media/$f" -OutFile $out -UseBasicParsing
 }
 
-# 3. install and open the studio (it opens the browser at http://localhost:3000)
+# 3. install
 npm ci
+
+# 4. live updates (owner 07.11.2026: "can't it update by itself when you push?"): a background job fetches the branch every
+# 15 s and, when something new arrived, refreshes only remotion\src and remotion\props. The studio reloads on its own.
+Get-Job -Name kq-studio-sync -ErrorAction SilentlyContinue | Remove-Job -Force
+Start-Job -Name kq-studio-sync -ArgumentList $Dir, $Branch -ScriptBlock {
+  param($Dir, $Branch)
+  $last = ""
+  while ($true) {
+    git -C $Dir fetch -q --depth 1 origin $Branch 2>$null
+    $head = (git -C $Dir rev-parse FETCH_HEAD 2>$null)
+    if ($head -and $head -ne $last) {
+      if ($last) { git -C $Dir checkout FETCH_HEAD -- remotion/src remotion/props 2>$null; "updated $(Get-Date -Format HH:mm:ss) $head" }
+      $last = $head
+    }
+    Start-Sleep 15
+  }
+} | Out-Null
+Write-Host "Live updates are on: changes pushed from the cloud appear in the studio by themselves within ~15 s." -ForegroundColor Green
+
+# 5. open the studio (it opens the browser at http://localhost:3000)
 npx remotion studio --port 3000
