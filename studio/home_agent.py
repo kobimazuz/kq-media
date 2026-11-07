@@ -2,7 +2,7 @@
 
 Every ~20 s it takes the oldest queued row of public.home_jobs (Supabase, project kept-quiet-publisher), runs ONE action
 from a closed list, and writes the result back. Every minute it updates public.home_heartbeat ("I am alive"): disk space,
-the two Flow MCP servers and the Codex service. Flow is driven through its own MCP servers (flow, flow-b) over stdio with
+the Flow MCP server and the Codex service. Flow (ONE account, server "flow") is driven through its MCP server over stdio with
 the official MCP Python client, exactly as Claude used to call them. Actions that cost Flow credits run only when the row
 carries approved_credits (the owner's approval), passed on as max_credits. No free shell commands.
 
@@ -24,7 +24,7 @@ from pathlib import Path
 
 import requests
 
-VERSION = "2026-11-07.5"
+VERSION = "2026-11-07.7"
 SB = "https://stvjtutkgpswmyrqyvec.supabase.co/rest/v1"
 KEY = os.environ.get("KQ_SUPABASE_SERVICE_KEY", "")
 REPO = Path(os.environ.get("KQ_REPO", r"D:\kq\youtube-ai-channel"))
@@ -37,13 +37,12 @@ LOG = Path(os.environ.get("KQ_AGENT_LOG", r"D:\kq\home_agent.log"))
 # Chrome profiles, CDP and studio ports, so they never touch the Chrome/studio of a Claude session at home (9333/9334,
 # 8787/8788). Each profile needs one Google sign-in in the Chrome window it opens the first time. Output stays on C, the
 # drive Flow downloads to (C -> D gave "EXDEV: cross-device link not permitted"); the agent then copies to the repo.
-SERVERS = {
-    "flow": {"args": [r"C:\Users\User\flow-mcp\dist\index.js"], "cdp": 9343, "studio": 8797,
-             "env": {"FLOW_MCP_HOME": r"D:\kq\agent-flow-a", "FLOW_MCP_CDP_PORT": "9343", "FLOW_MCP_PORT": "8797",
-                     "FLOW_MCP_OUTPUT": r"C:\Users\User\flow-agent-out\a"}},
-    "flow-b": {"args": [r"C:/Users/User/flow-mcp-2/dist/index.js"], "cdp": 9344, "studio": 8798,
-               "env": {"FLOW_MCP_HOME": r"D:\kq\agent-flow-b", "FLOW_MCP_CDP_PORT": "9344", "FLOW_MCP_PORT": "8798",
-                       "FLOW_MCP_OUTPUT": r"C:\Users\User\flow-agent-out\b", "FLOW_MCP_PAUSE_MIN_S": "8", "FLOW_MCP_PAUSE_MAX_S": "20"}},
+SERVERS = {   # ONE Flow account on this PC: account A in its existing profile ~\.flow-mcp\chrome-profile, server "flow"
+    # (flow_jobs/AGENT.md 02.11.2026: account B got an unusual-activity warning, flow-b / flow-mcp-2 are disabled; owner
+    # 07.11.2026: two accounts on one PC collide). No new profile, no automatic sign-in. One instance, one job at a time:
+    # while the agent runs, no Claude session at home should drive Flow (same profile, same Chrome on port 9333).
+    "flow": {"args": [r"C:\Users\User\flow-mcp\dist\index.js"], "cdp": 9333, "studio": 8787,
+             "env": {"FLOW_MCP_OUTPUT": r"C:\Users\User\flow-agent-out"}},
 }
 PAID = {"flow_clips", "flow_continue"}
 NOWIN = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0)}   # no console windows popping up and closing          # cost credits: need approved_credits on the row
@@ -90,7 +89,7 @@ class Flow:
         read, write = await self.stack.enter_async_context(stdio_client(params))
         self.session = await self.stack.enter_async_context(ClientSession(read, write))
         await self.session.initialize()
-        log(f"{self.name}: connected (own Chrome profile {cfg['env']['FLOW_MCP_HOME']}, studio http://127.0.0.1:{cfg['studio']})")
+        log(f"{self.name}: connected (account A profile, studio http://127.0.0.1:{cfg['studio']})")
 
     async def close(self):
         if self.stack:
