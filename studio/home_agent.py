@@ -24,7 +24,7 @@ from pathlib import Path
 
 import requests
 
-VERSION = "2026-11-07.1"
+VERSION = "2026-11-07.2"
 SB = "https://stvjtutkgpswmyrqyvec.supabase.co/rest/v1"
 KEY = os.environ.get("KQ_SUPABASE_SERVICE_KEY", "")
 REPO = Path(os.environ.get("KQ_REPO", r"D:\kq\youtube-ai-channel"))
@@ -109,6 +109,7 @@ class Flow:
 
 
 FLOWS = {n: Flow(n) for n in SERVERS}
+RESTART = []
 
 
 def kill_chrome(cdp_port):
@@ -154,6 +155,45 @@ def push_results(job_id, files):
     raise RuntimeError("git push failed 3 times; files are in " + str(dest))
 
 
+def _json(text):
+    try:
+        i = text.find("{")
+        return json.loads(text[i:]) if i >= 0 else {}
+    except ValueError:
+        return {}
+
+
+async def wait_done(srv, first, limit_s=7200):
+    """Flow answers within ~45 s with the jobs still running (FLOW_MCP_PATIENCE_MS); call flow_wait until they finish.
+    Returns (last wait answer, output_dir, files listed by Flow)."""
+    j = _json(first["text"])
+    out_dir = j.get("output_dir") or ""
+    ids = [x["id"] for x in j.get("jobs", []) if x.get("id")]
+    last, t0 = first, time.time()
+    while time.time() - t0 < limit_s:
+        jobs = _json(last["text"]).get("jobs", [])
+        if _json(last["text"]).get("finished") is True or (jobs and all(x.get("status") not in ("running", "queued", "pending") for x in jobs)):
+            break
+        last = await FLOWS[srv].call("flow_wait", {"job_ids": ids, "timeout_seconds": 900} if ids else {"timeout_seconds": 900}, 1000)
+    files = [f for x in _json(last["text"]).get("jobs", []) for f in (x.get("files") or [])]
+    return last, out_dir, files
+
+
+def collect(out_dir, listed, project, since):
+    found = [Path(f) for f in listed if Path(f).is_file()]
+    for d in [Path(out_dir)] if out_dir else []:
+        if d.exists():
+            found += [p for p in d.rglob("*") if p.is_file() and p.stat().st_mtime >= since - 2
+                      and p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp", ".mp4", ".mov", ".wav", ".mp3")]
+    found += new_files(project, since)
+    seen, out = set(), []
+    for f in found:
+        k = str(f.resolve()).lower()
+        if k not in seen:
+            seen.add(k); out.append(f)
+    return out
+
+
 def new_files(project, since):
     d = FLOW_OUT / project
     if not d.exists():
@@ -178,29 +218,31 @@ async def run_action(job):
     if a == "flow_images":                      # free: Flow's Agent mode, up to 50 images, 0 credits
         keep = {k: args[k] for k in ("project", "scenes", "aspect_ratio", "references", "scene_references") if k in args}
         r = await FLOWS[srv].call("flow_agent_images", keep, 3600)
-        r["files"] = push_results(job["id"], new_files(args["project"], t0))
-        return r
+        w, out_dir, listed = await wait_done(srv, r)
+        return {"start": r["text"][:3000], "wait": w["text"][-3000:],
+                "files": push_results(job["id"], collect(out_dir, listed, args["project"], t0))}
     if a == "flow_clips":                       # paid
         r = await FLOWS[srv].call("flow_generate", {"project": args["project"], "scenes": args["scenes"],
                                                     "max_credits": job["approved_credits"]}, 600)
-        waits = []
-        for _ in range(8):                      # up to 2 hours
-            w = await FLOWS[srv].call("flow_wait", {"timeout_seconds": 900}, 1000)
-            waits.append(w["text"][-1500:])
-            if "pending" not in w["text"].lower() and "running" not in w["text"].lower():
-                break
-        r["wait"] = waits
-        r["files"] = push_results(job["id"], new_files(args["project"], t0))
-        return r
+        w, out_dir, listed = await wait_done(srv, r)
+        return {"start": r["text"][:3000], "wait": w["text"][-3000:],
+                "files": push_results(job["id"], collect(out_dir, listed, args["project"], t0))}
     if a == "flow_continue":                    # paid
         keep = {k: args[k] for k in ("project", "from_asset", "prompt", "attach", "mode", "force") if k in args}
         r = await FLOWS[srv].call("flow_continue", {**keep, "acknowledge_cost": True}, 1800)
-        r["files"] = push_results(job["id"], new_files(args["project"], t0))
-        return r
+        w, out_dir, listed = await wait_done(srv, r)
+        return {"start": r["text"][:3000], "wait": w["text"][-3000:],
+                "files": push_results(job["id"], collect(out_dir, listed, args["project"], t0))}
     if a in ("flow_download", "flow_retry", "flow_wait", "flow_assets"):   # free
         r = await FLOWS[srv].call(a, {k: v for k, v in args.items() if k != "server"}, 1800)
         if a == "flow_download" and args.get("project"):
-            r["files"] = push_results(job["id"], new_files(args["project"], t0))
+            w, out_dir, listed = await wait_done(srv, r)
+            r["files"] = push_results(job["id"], collect(out_dir, listed, args["project"], t0))
+        elif a == "flow_wait":
+            j = _json(r["text"])
+            files = [Path(f) for x in j.get("jobs", []) for f in (x.get("files") or []) if Path(f).is_file()]
+            if args.get("push"):
+                r["files"] = push_results(job["id"], files)
         return r
     if a == "codex_batch":                      # hands a batch to codex_jobs\watch.ps1 (it already runs without Claude)
         name = "".join(c for c in args["name"] if c.isalnum() or c in "_-")
@@ -211,6 +253,13 @@ async def run_action(job):
         return await restart_flow(srv)
     if a == "restart_codex_watch":
         return restart_codex()
+    if a == "self_update":                      # new agent.py from the media repo, then exit: the scheduled task restarts it
+        src = "https://raw.githubusercontent.com/kobimazuz/kq-media/main/studio/home_agent.py"
+        code = requests.get(src, timeout=60).text
+        compile(code, "agent.py", "exec")       # never replace a working agent with a broken file
+        Path(__file__).write_text(code, encoding="utf-8")
+        RESTART.append(True)
+        return {"updated": True, "bytes": len(code)}
     if a == "git_pull":
         return {"out": git("pull", "-q", "origin", BRANCH, check=False).stdout[-1000:]}
     raise ValueError(f"unknown action {a}")
@@ -321,6 +370,11 @@ async def main():
                     await handle(got[0])
                     beat()
                     last_beat = time.time()
+                    if RESTART:
+                        log("updated, restarting")
+                        for fl in FLOWS.values():
+                            await fl.close()
+                        os._exit(3)           # the scheduled task starts the new version within a minute
                     continue
         except Exception as e:  # noqa: BLE001
             log("loop error:", e)
