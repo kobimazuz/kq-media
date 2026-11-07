@@ -38,9 +38,10 @@ foreach ($part in $Parts) {
   $list = (Invoke-WebRequest "$Media/files.txt" -UseBasicParsing).Content -split "`n" | Where-Object { $_.Trim() }
   $i = 0
   foreach ($f in $list) {
-    $i++; $f = $f.Trim(); $out = Join-Path $pub ($f -replace "/", "\")
-    # the gift badge is small and gets fixed now and then (07.11: outline under the keyword): always fetched again
-    if ((Test-Path $out) -and ($f -notlike "*badge.png")) { continue }
+    # a line is "path<TAB>size": a file is fetched again when it is missing or its size changed (a shot rebuilt in the cloud)
+    $i++; $cols = $f.Trim() -split "`t"; $f = $cols[0]; $size = if ($cols.Count -gt 1) { [int64]$cols[1] } else { -1 }
+    $out = Join-Path $pub ($f -replace "/", "\")
+    if ((Test-Path $out) -and (($size -lt 0) -or ((Get-Item $out).Length -eq $size))) { continue }
     New-Item -ItemType Directory -Force (Split-Path $out) | Out-Null
     Write-Host "[$part $i/$($list.Count)] $f"
     Invoke-WebRequest "$Media/$f" -OutFile $out -UseBasicParsing

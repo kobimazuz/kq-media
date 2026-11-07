@@ -1,36 +1,36 @@
-assemble/intro_cover.mp4
-assemble/intro_hook.mp4
-assemble/intro_disclaimer.mp4
-assemble/00.mp4
-assemble/01.mp4
-assemble/02.mp4
-assemble/03.mp4
-assemble/04.mp4
-assemble/05.mp4
-assemble/06.mp4
-assemble/07.mp4
-assemble/08.mp4
-assemble/09.mp4
-assemble/10.mp4
-assemble/11.mp4
-assemble/12.mp4
-assemble/13.mp4
-assemble/14.mp4
-assemble/15.mp4
-assemble/16.mp4
-assemble/17.mp4
-assemble/18.mp4
-assemble/19.mp4
-assemble/20.mp4
-assemble/21.mp4
-assemble/22.mp4
-assemble/23.mp4
-assemble/24.mp4
-assemble/25.mp4
-assemble/26.mp4
-assemble/bed.wav
-assemble/rm/logo.png
-assemble/rm/last.png
-assemble/rm/end_chorus.mp3
-assemble/rm/endcard.mp4
-assemble/rm/badge.png
+assemble/intro_cover.mp4	420810
+assemble/intro_hook.mp4	1404465
+assemble/intro_disclaimer.mp4	61002
+assemble/00.mp4	2076737
+assemble/01.mp4	1916350
+assemble/02.mp4	4215166
+assemble/03.mp4	2732235
+assemble/04.mp4	1966682
+assemble/05.mp4	1828782
+assemble/06.mp4	2793721
+assemble/07.mp4	4143204
+assemble/08.mp4	2754647
+assemble/09.mp4	4172129
+assemble/10.mp4	2737000
+assemble/11.mp4	3314985
+assemble/12.mp4	1395378
+assemble/13.mp4	3121690
+assemble/14.mp4	3800675
+assemble/15.mp4	2823284
+assemble/16.mp4	3685455
+assemble/17.mp4	6106144
+assemble/18.mp4	3078779
+assemble/19.mp4	2240848
+assemble/20.mp4	2084451
+assemble/21.mp4	2929520
+assemble/22.mp4	4056246
+assemble/23.mp4	3123439
+assemble/24.mp4	3797198
+assemble/25.mp4	4952790
+assemble/26.mp4	5201305
+assemble/bed.wav	27878618
+assemble/rm/logo.png	30543
+assemble/rm/last.png	1497612
+assemble/rm/end_chorus.mp3	107210
+assemble/rm/endcard.mp4	701914
+assemble/rm/badge.png	200067
