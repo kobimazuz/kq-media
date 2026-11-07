@@ -24,7 +24,7 @@ from pathlib import Path
 
 import requests
 
-VERSION = "2026-11-07.7"
+VERSION = "2026-11-07.8"
 SB = "https://stvjtutkgpswmyrqyvec.supabase.co/rest/v1"
 KEY = os.environ.get("KQ_SUPABASE_SERVICE_KEY", "")
 REPO = Path(os.environ.get("KQ_REPO", r"D:\kq\youtube-ai-channel"))
@@ -76,33 +76,72 @@ def sb(path, method="GET", body=None, prefer=None):
 
 # ------------------------------------------------------------------ Flow MCP sessions (kept open between jobs)
 class Flow:
-    def __init__(self, name):
-        self.name, self.stack, self.session = name, None, None
+    """One Flow MCP server. Its stdio connection lives inside ONE worker task, which opens it, serves calls from a queue
+    and closes it, so opening and closing always happen in the same task. (07.11.2026: closing it from another task gave
+    anyio "Attempted to exit cancel scope in a different task than it was entered in" and took the whole agent down.)"""
 
-    async def open(self):
+    def __init__(self, name):
+        self.name, self.task, self.q, self.session = name, None, None, None
+
+    async def _worker(self, ready):
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client
         cfg = SERVERS[self.name]
         # the child does not inherit our environment by default: pass all of it plus the server's own variables
         params = StdioServerParameters(command=shutil.which("node") or "node", args=cfg["args"], env={**os.environ, **cfg["env"]})
-        self.stack = AsyncExitStack()
-        read, write = await self.stack.enter_async_context(stdio_client(params))
-        self.session = await self.stack.enter_async_context(ClientSession(read, write))
-        await self.session.initialize()
-        log(f"{self.name}: connected (account A profile, studio http://127.0.0.1:{cfg['studio']})")
+        try:
+            async with stdio_client(params) as (read, write):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    self.session = session
+                    log(f"{self.name}: connected (account A profile, studio http://127.0.0.1:{cfg['studio']})")
+                    ready.set_result(True)
+                    while True:
+                        item = await self.q.get()
+                        if item is None:
+                            break
+                        tool, args, fut = item
+                        try:
+                            res = await session.call_tool(tool, arguments=args)
+                            if not fut.done():
+                                fut.set_result(res)
+                        except Exception as e:  # noqa: BLE001
+                            if not fut.done():
+                                fut.set_exception(e)
+        except BaseException as e:  # noqa: BLE001
+            if not ready.done():
+                ready.set_exception(e if isinstance(e, Exception) else RuntimeError(str(e)))
+            else:
+                log(f"{self.name}: connection ended: {e}")
+        finally:
+            self.session = None
+            while self.q and not self.q.empty():          # anyone still waiting gets an error, not a hang
+                item = self.q.get_nowait()
+                if item and not item[2].done():
+                    item[2].set_exception(RuntimeError("Flow connection closed"))
+
+    async def open(self):
+        self.q = asyncio.Queue()
+        ready = asyncio.get_running_loop().create_future()
+        self.task = asyncio.create_task(self._worker(ready))
+        await asyncio.wait_for(ready, 180)
 
     async def close(self):
-        if self.stack:
+        if self.task and not self.task.done():
+            self.q.put_nowait(None)
             try:
-                await self.stack.aclose()
+                await asyncio.wait_for(asyncio.shield(self.task), 20)
             except Exception as e:  # noqa: BLE001
-                log(f"{self.name}: close error {e}")
-        self.stack = self.session = None
+                log(f"{self.name}: close timeout ({e}), cancelling")
+                self.task.cancel()
+        self.task = None
 
     async def call(self, tool, args, timeout=1200):
-        if not self.session:
+        if not self.task or self.task.done():
             await self.open()
-        res = await asyncio.wait_for(self.session.call_tool(tool, arguments=args), timeout)
+        fut = asyncio.get_running_loop().create_future()
+        self.q.put_nowait((tool, args, fut))
+        res = await asyncio.wait_for(fut, timeout)
         texts = [getattr(c, "text", "") for c in (res.content or []) if getattr(c, "text", None)]
         structured = getattr(res, "structured_content", None) or getattr(res, "structuredContent", None)
         is_err = getattr(res, "is_error", None) or getattr(res, "isError", False)
@@ -150,7 +189,7 @@ def push_results(job_id, files):
         try:
             git("add", "-f", str(dest))
             git("commit", "-q", "-m", f"home agent: results of job {job_id}", check=False)
-            git("pull", "-q", "--rebase", "origin", BRANCH)
+            git("pull", "-q", "--rebase", "--autostash", "origin", BRANCH)   # other local edits (watch.ps1 etc.) must not block it
             git("push", "-q", "origin", f"HEAD:{BRANCH}")
             return out
         except subprocess.CalledProcessError as e:
@@ -223,6 +262,13 @@ async def run_action(job):
     if a == "flow_images":                      # free: Flow's Agent mode, up to 50 images, 0 credits
         keep = {k: args[k] for k in ("project", "scenes", "aspect_ratio", "references", "scene_references") if k in args}
         r = await FLOWS[srv].call("flow_agent_images", keep, 3600)
+        w, out_dir, listed = await wait_done(srv, r)
+        return {"start": r["text"][:3000], "wait": w["text"][-3000:],
+                "files": push_results(job["id"], collect(out_dir, listed, args["project"], t0))}
+    if a == "flow_images_single":               # one image per scene, Flow's own generator, exact prompt, 0 credits
+        scenes = [{"prompt": s, "type": "image", "max_credits": 0, **({"aspect_ratio": args["aspect_ratio"]} if "aspect_ratio" in args else {})}
+                  for s in args["scenes"]]
+        r = await FLOWS[srv].call("flow_generate", {"project": args["project"], "scenes": scenes}, 600)
         w, out_dir, listed = await wait_done(srv, r)
         return {"start": r["text"][:3000], "wait": w["text"][-3000:],
                 "files": push_results(job["id"], collect(out_dir, listed, args["project"], t0))}
@@ -404,3 +450,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
