@@ -1,4 +1,4 @@
-assemble/intro_cover.mp4	418466
+assemble/intro_cover.mp4	470000
 assemble/intro_hook.mp4	1600555
 assemble/intro_disclaimer.mp4	61002
 assemble/00.mp4	3503589
