@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 $Dir    = "D:\kq\studio"
 $Branch = "claude/remotion-templates-0711"
 $MediaRoot = "https://raw.githubusercontent.com/kobimazuz/kq-media/main/studio"
-$Parts  = "e01_01","e01_02","e01_03","e01_04","e01_05","e01_06","e01_07"
+$Parts  = "e01_01","e01_02","e01_03","e01_04","e01_05","e01_06","e01_07","full_e01_07"   # full_e01_07 = the wide full episode (W01-Full)
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) { Write-Host "Node.js is missing: install it from https://nodejs.org (LTS) and run again." -ForegroundColor Red; return }
 if (-not (Get-Command git  -ErrorAction SilentlyContinue)) { Write-Host "Git is missing: install it from https://git-scm.com and run again." -ForegroundColor Red; return }
@@ -35,7 +35,9 @@ foreach ($part in $Parts) {
   $pub = "public\$part"
   if ((Test-Path $pub) -and -not (Get-Item $pub).PSIsContainer) { Remove-Item $pub -Force }
   New-Item -ItemType Directory -Force $pub | Out-Null
-  $list = (Invoke-WebRequest "$Media/files.txt" -UseBasicParsing).Content -split "`n" | Where-Object { $_.Trim() }
+  # a part that is not uploaded yet (no files.txt) is skipped, not an error
+  try { $list = (Invoke-WebRequest "$Media/files.txt" -UseBasicParsing).Content -split "`n" | Where-Object { $_.Trim() } }
+  catch { Write-Host "$part is not uploaded yet, skipped" -ForegroundColor Yellow; continue }
   $i = 0
   foreach ($f in $list) {
     # a line is "path<TAB>size": a file is fetched again when it is missing or its size changed (a shot rebuilt in the cloud)
