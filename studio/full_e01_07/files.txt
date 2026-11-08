@@ -1,4 +1,4 @@
-s_hook.mp4	1717415
+s_hook.mp4	1686550
 s_black.mp4	4593
 s_disc.mp4	58837
 s_title.mp4	25486
@@ -188,5 +188,5 @@ s_e017_23.mp4	3546526
 s_e017_24.mp4	6710281
 s_e017_25.mp4	8712107
 s_end.mp4	3219253
-mix.m4a	35083729
+mix.m4a	35072850
 logo.png	30543
