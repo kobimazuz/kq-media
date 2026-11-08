@@ -61,7 +61,12 @@ Start-Job -Name kq-studio-sync -ArgumentList $Dir, $Branch -ScriptBlock {
     git -C $Dir fetch -q --depth 1 origin $Branch 2>$null
     $head = (git -C $Dir rev-parse FETCH_HEAD 2>$null)
     if ($head -and $head -ne $last) {
-      if ($last) { git -C $Dir checkout FETCH_HEAD -- remotion/src remotion/props 2>$null; "updated $(Get-Date -Format HH:mm:ss) $head" }
+      # owner 08.11.2026 ("every update resets the studio and shows an error"): only the files that really changed are
+      # written; rewriting every file made the studio briefly miss them (Can't resolve ...) and start over
+      if ($last) {
+        $changed = @(git -C $Dir diff --name-only $last $head -- remotion/src remotion/props 2>$null)
+        if ($changed.Count) { git -C $Dir checkout $head -- $changed 2>$null; "updated $(Get-Date -Format HH:mm:ss): $($changed -join ', ')" }
+      }
       $last = $head
     }
     Start-Sleep 15
