@@ -11,7 +11,7 @@ assemble/06.mp4	4774578
 assemble/07.mp4	3609065
 assemble/08.mp4	2741908
 assemble/09.mp4	1903679
-assemble/10.mp4	2369626
+assemble/10.mp4	2948914
 assemble/11.mp4	5312089
 assemble/12.mp4	2907089
 assemble/13.mp4	7586888
@@ -24,7 +24,7 @@ assemble/19.mp4	3214458
 assemble/20.mp4	2276333
 assemble/21.mp4	2397725
 assemble/22.mp4	3534849
-assemble/bed.wav	25977818
+assemble/bed.wav	26009818
 assemble/rm/logo.png	30543
 assemble/rm/last.png	966717
 assemble/rm/end_chorus.mp3	107210
