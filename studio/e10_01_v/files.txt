@@ -43,3 +43,5 @@ assemble/rm/end_chorus.mp3	107210
 assemble/rm/endcard.mp4	671745
 assemble/rm/last.png	1110577
 assemble/rm/logo.png	30543
+assemble/rm/cover_open_main.png	3019688
+assemble/rm/cover_open_clean.png	2960720
