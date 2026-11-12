@@ -12,6 +12,13 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) { Write-Host "Node.js
 if (-not (Get-Command git  -ErrorAction SilentlyContinue)) { Write-Host "Git is missing: install it from https://git-scm.com and run again." -ForegroundColor Red; return }
 Write-Host "node $(node -v)"
 
+# 0. a leftover from an earlier run (12.11.2026: "index.lock: File exists", then "Can't resolve ./Root"): stop the old sync job and any
+#    git process of THIS folder, and remove a stale lock, so the reset below can finish and restore every file
+Get-Job -Name kq-studio-sync -ErrorAction SilentlyContinue | Remove-Job -Force
+Get-CimInstance Win32_Process -Filter "Name='git.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*kq*studio*" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Start-Sleep 1
+if (Test-Path "$Dir\.git\index.lock") { Remove-Item "$Dir\.git\index.lock" -Force; Write-Host "removed a stale git lock" -ForegroundColor Yellow }
+
 # 1. only the remotion folder of the branch (a separate, light copy)
 if (-not (Test-Path "$Dir\.git")) {
   git clone --filter=blob:none --no-checkout --depth 1 --branch $Branch https://github.com/kobimazuz/youtube-ai-channel.git $Dir
