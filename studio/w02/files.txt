@@ -6,7 +6,7 @@ base_e12.mp4	66103362
 base_e13.mp4	52955661
 base_e14.mp4	75684855
 logo.png	21217
-mix.m4a	35399219
+mix.m4a	34170411
 s_ask.mp4	348988
 s_black.mp4	3412
 s_card1.mp4	951069
