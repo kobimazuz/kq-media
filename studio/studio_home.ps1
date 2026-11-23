@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 $Dir    = "D:\kq\studio"
 $Branch = "claude/remotion-templates-0711"
 $MediaRoot = "https://raw.githubusercontent.com/kobimazuz/kq-media/main/studio"
-$Parts  = "e01_01","e01_02","e01_03","e01_04","e01_05","e01_06","e01_07","full_e01_07","e08_01_v","e09_01_v","e10_01_v","secret_wide/s02"   # full_e01_07 = the wide full episode (W01-Full); e08-e10 = episodes 8-10 from the final folders (12.11.2026)
+$Parts  = "e01_01","e01_02","e01_03","e01_04","e01_05","e01_06","e01_07","full_e01_07","e08_01_v","e09_01_v","e10_01_v","secret_wide/s02","w02"   #
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) { Write-Host "Node.js is missing: install it from https://nodejs.org (LTS) and run again." -ForegroundColor Red; return }
 if (-not (Get-Command git  -ErrorAction SilentlyContinue)) { Write-Host "Git is missing: install it from https://git-scm.com and run again." -ForegroundColor Red; return }
