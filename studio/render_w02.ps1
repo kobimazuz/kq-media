@@ -1,6 +1,6 @@
 # רינדור פרק 2 המלא בחלקים + חיבור + הדבקת קול. הרצה: irm https://raw.githubusercontent.com/kobimazuz/kq-media/main/studio/render_w02.ps1 | iex
 $ErrorActionPreference = "Stop"
-$Total = 27339; $Step = 4000
+$Total = 21822; $Step = 4000
 $Root = "D:\kq\studio\remotion"; $Out = "D:\kq\parts"
 New-Item -ItemType Directory -Force $Out | Out-Null
 Set-Location $Root
